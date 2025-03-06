@@ -1,0 +1,327 @@
+import { pgTable, serial, varchar, text, decimal, timestamp, boolean, enumType, integer, uniqueIndex, index, foreignKey } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
+
+// Перечисления (ENUM)
+export const userRoleEnum = enumType('user_role', ['client', 'owner', 'delivery', 'admin', 'superadmin']);
+export const toolItemStatusEnum = enumType('tool_item_status', ['available', 'reserved', 'rented', 'unavailable']);
+export const deliveryTypeEnum = enumType('delivery_type', ['pickup', 'delivery']);
+export const orderStatusEnum = enumType('order_status', ['pending', 'confirmed', 'in_progress', 'completed', 'canceled']);
+export const deliveryStatusEnum = enumType('delivery_status', ['assigned', 'in_progress', 'delivered']);
+export const reservationStatusEnum = enumType('reservation_status', ['pending', 'confirmed', 'canceled']);
+export const valueTypeEnum = enumType('value_type', ['string', 'number', 'dimensions']);
+// Новое перечисление для типов адреса
+export const addressTypeEnum = enumType('address_type', ['physical', 'pickup', 'delivery', 'office']);
+// Новое перечисление для типов контактов
+export const contactTypeEnum = enumType('contact_type', ['phone', 'email', 'whatsapp', 'telegram']);
+
+// Таблица Users (без изменений)
+export const users = pgTable('Users', {
+  id: serial('id').primaryKey(),
+  email: varchar('email', { length: 255 }).unique().notNull(),
+  password: varchar('password', { length: 255 }).notNull(),
+  role: userRoleEnum('role').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// Таблица RentalPoints (расширена)
+export const rentalPoints = pgTable('RentalPoints', {
+  id: serial('id').primaryKey(),
+  ownerId: integer('owner_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 255 }).notNull(),
+  address: text('address').notNull(),
+  addressType: addressTypeEnum('address_type').notNull().default('physical'), // Тип адреса
+  website: varchar('website', { length: 255 }), // Сайт точки аренды
+  lat: decimal('lat'),
+  lng: decimal('lng'),
+  contactInfo: text('contact_info'), // Оставляем как опциональное поле для дополнительных заметок
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// Новая таблица RentalPointContacts для контактных данных
+export const rentalPointContacts = pgTable('RentalPointContacts', {
+  id: serial('id').primaryKey(),
+  rentalPointId: integer('rental_point_id').notNull().references(() => rentalPoints.id, { onDelete: 'cascade' }),
+  contactType: contactTypeEnum('contact_type').notNull(), // Тип контакта (телефон, email и т.д.)
+  value: varchar('value', { length: 255 }).notNull(), // Значение (номер телефона, email и т.д.)
+  isPrimary: boolean('is_primary').default(false), // Основной контакт или нет
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+  rentalPointIdx: index('idx_rentalpointcontacts_rental_point_id').on(table.rentalPointId),
+}));
+
+// Таблица ToolCategories (без изменений)
+export const toolCategories = pgTable('ToolCategories', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  parentId: integer('parent_id').references(() => toolCategories.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+  parentIdx: index('idx_toolcategories_parent_id').on(table.parentId),
+}));
+
+// Таблица AttributeUnits (без изменений)
+export const attributeUnits = pgTable('AttributeUnits', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 50 }).unique().notNull(),
+});
+
+// Таблица Attributes (без изменений)
+export const attributes = pgTable('Attributes', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 255 }).unique().notNull(),
+  unitId: integer('unit_id').references(() => attributeUnits.id, { onDelete: 'set null' }),
+  valueType: valueTypeEnum('value_type').notNull(),
+}, (table) => ({
+  unitIdx: index('idx_attributes_unit_id').on(table.unitId),
+}));
+
+// Таблица CategoryAttributes (без изменений)
+export const categoryAttributes = pgTable('CategoryAttributes', {
+  id: serial('id').primaryKey(),
+  categoryId: integer('category_id').notNull().references(() => toolCategories.id, { onDelete: 'cascade' }),
+  attributeId: integer('attribute_id').notNull().references(() => attributes.id, { onDelete: 'cascade' }),
+  isRequired: boolean('is_required').default(false),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+  uniqueCategoryAttribute: uniqueIndex('category_attributes_unique').on(table.categoryId, table.attributeId),
+  categoryIdx: index('idx_categoryattributes_category_id').on(table.categoryId),
+  attributeIdx: index('idx_categoryattributes_attribute_id').on(table.attributeId),
+}));
+
+// Таблица ToolModels (без изменений)
+export const toolModels = pgTable('ToolModels', {
+  id: serial('id').primaryKey(),
+  categoryId: integer('category_id').notNull().references(() => toolCategories.id, { onDelete: 'set null' }),
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description'),
+  imageUrl: text('image_url'),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+  categoryIdx: index('idx_toolmodels_category_id').on(table.categoryId),
+}));
+
+// Таблица ToolPricing (без изменений)
+export const toolPricing = pgTable('ToolPricing', {
+  id: serial('id').primaryKey(),
+  toolModelId: integer('tool_model_id').notNull().references(() => toolModels.id, { onDelete: 'cascade' }),
+  periodHours: integer('period_hours').notNull(),
+  price: decimal('price').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+  uniqueToolPeriod: uniqueIndex('tool_pricing_unique').on(table.toolModelId, table.periodHours),
+  toolModelIdx: index('idx_toolpricing_tool_model_id').on(table.toolModelId),
+}));
+
+// Таблица ToolItems (без изменений)
+export const toolItems = pgTable('ToolItems', {
+  id: serial('id').primaryKey(),
+  toolModelId: integer('tool_model_id').notNull().references(() => toolModels.id, { onDelete: 'cascade' }),
+  rentalPointId: integer('rental_point_id').notNull().references(() => rentalPoints.id, { onDelete: 'cascade' }),
+  serialNumber: varchar('serial_number', { length: 255 }),
+  status: toolItemStatusEnum('status').default('available'),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+  toolModelIdx: index('idx_toolitems_tool_model_id').on(table.toolModelId),
+  rentalPointIdx: index('idx_toolitems_rental_point_id').on(table.rentalPointId),
+}));
+
+// Таблица ToolAttributes (без изменений)
+export const toolAttributes = pgTable('ToolAttributes', {
+  id: serial('id').primaryKey(),
+  toolModelId: integer('tool_model_id').notNull().references(() => toolModels.id, { onDelete: 'cascade' }),
+  attributeId: integer('attribute_id').notNull().references(() => attributes.id, { onDelete: 'cascade' }),
+  value: varchar('value', { length: 255 }).notNull(),
+  valueNumeric: decimal('value_numeric'),
+}, (table) => ({
+  toolModelIdx: index('idx_toolattributes_tool_model_id').on(table.toolModelId),
+  attributeIdx: index('idx_toolattributes_attribute_id').on(table.attributeId),
+}));
+
+// Таблица Orders (без изменений)
+export const orders = pgTable('Orders', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'set null' }),
+  toolItemId: integer('tool_item_id').notNull().references(() => toolItems.id, { onDelete: 'set null' }),
+  rentalPointId: integer('rental_point_id').notNull().references(() => rentalPoints.id, { onDelete: 'set null' }),
+  pricingId: integer('pricing_id').notNull().references(() => toolPricing.id, { onDelete: 'set null' }),
+  deliveryType: deliveryTypeEnum('delivery_type').notNull(),
+  status: orderStatusEnum('status').default('pending'),
+  totalPrice: decimal('total_price').notNull(),
+  address: text('address'),
+  startDate: timestamp('start_date').notNull(),
+  endDate: timestamp('end_date').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+  createdAtIdx: index('idx_orders_created_at').on(table.createdAt),
+  userIdx: index('idx_orders_user_id').on(table.userId),
+  toolItemIdx: index('idx_orders_tool_item_id').on(table.toolItemId),
+  pricingIdx: index('idx_orders_pricing_id').on(table.pricingId),
+}));
+
+// Таблица Deliveries (без изменений)
+export const deliveries = pgTable('Deliveries', {
+  id: serial('id').primaryKey(),
+  orderId: integer('order_id').notNull().references(() => orders.id, { onDelete: 'cascade' }),
+  deliveryUserId: integer('delivery_user_id').notNull().references(() => users.id, { onDelete: 'set null' }),
+  status: deliveryStatusEnum('status').default('assigned'),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  orderIdx: index('idx_deliveries_order_id').on(table.orderId),
+}));
+
+// Таблица ToolReservations (без изменений)
+export const toolReservations = pgTable('ToolReservations', {
+  id: serial('id').primaryKey(),
+  toolItemId: integer('tool_item_id').notNull().references(() => toolItems.id, { onDelete: 'cascade' }),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'set null' }),
+  startDate: timestamp('start_date').notNull(),
+  endDate: timestamp('end_date').notNull(),
+  status: reservationStatusEnum('status').default('pending'),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+  toolItemIdx: index('idx_toolreservations_tool_item_id').on(table.toolItemId),
+  userIdx: index('idx_toolreservations_user_id').on(table.userId),
+}));
+
+// Обновленные отношения
+export const usersRelations = relations(users, ({ many }) => ({
+  rentalPoints: many(rentalPoints),
+  orders: many(orders),
+  deliveries: many(deliveries),
+  toolReservations: many(toolReservations),
+}));
+
+export const rentalPointsRelations = relations(rentalPoints, ({ one, many }) => ({
+  owner: one(users, {
+    fields: [rentalPoints.ownerId],
+    references: [users.id],
+  }),
+  toolItems: many(toolItems),
+  orders: many(orders),
+  contacts: many(rentalPointContacts), // Новая связь
+}));
+
+export const rentalPointContactsRelations = relations(rentalPointContacts, ({ one }) => ({
+  rentalPoint: one(rentalPoints, {
+    fields: [rentalPointContacts.rentalPointId],
+    references: [rentalPoints.id],
+  }),
+}));
+
+export const toolCategoriesRelations = relations(toolCategories, ({ one, many }) => ({
+  parent: one(toolCategories, {
+    fields: [toolCategories.parentId],
+    references: [toolCategories.id],
+  }),
+  toolModels: many(toolModels),
+  categoryAttributes: many(categoryAttributes),
+}));
+
+export const categoryAttributesRelations = relations(categoryAttributes, ({ one }) => ({
+  category: one(toolCategories, {
+    fields: [categoryAttributes.categoryId],
+    references: [toolCategories.id],
+  }),
+  attribute: one(attributes, {
+    fields: [categoryAttributes.attributeId],
+    references: [attributes.id],
+  }),
+}));
+
+export const toolModelsRelations = relations(toolModels, ({ one, many }) => ({
+  category: one(toolCategories, {
+    fields: [toolModels.categoryId],
+    references: [toolCategories.id],
+  }),
+  toolItems: many(toolItems),
+  toolAttributes: many(toolAttributes),
+  toolPricing: many(toolPricing),
+}));
+
+export const toolPricingRelations = relations(toolPricing, ({ one, many }) => ({
+  toolModel: one(toolModels, {
+    fields: [toolPricing.toolModelId],
+    references: [toolModels.id],
+  }),
+  orders: many(orders),
+}));
+
+export const toolItemsRelations = relations(toolItems, ({ one, many }) => ({
+  toolModel: one(toolModels, {
+    fields: [toolItems.toolModelId],
+    references: [toolModels.id],
+  }),
+  rentalPoint: one(rentalPoints, {
+    fields: [toolItems.rentalPointId],
+    references: [rentalPoints.id],
+  }),
+  orders: many(orders),
+  toolReservations: many(toolReservations),
+}));
+
+export const toolAttributesRelations = relations(toolAttributes, ({ one }) => ({
+  toolModel: one(toolModels, {
+    fields: [toolAttributes.toolModelId],
+    references: [toolModels.id],
+  }),
+  attribute: one(attributes, {
+    fields: [toolAttributes.attributeId],
+    references: [attributes.id],
+  }),
+}));
+
+export const ordersRelations = relations(orders, ({ one }) => ({
+  user: one(users, {
+    fields: [orders.userId],
+    references: [users.id],
+  }),
+  toolItem: one(toolItems, {
+    fields: [orders.toolItemId],
+    references: [toolItems.id],
+  }),
+  rentalPoint: one(rentalPoints, {
+    fields: [orders.rentalPointId],
+    references: [rentalPoints.id],
+  }),
+  pricing: one(toolPricing, {
+    fields: [orders.pricingId],
+    references: [toolPricing.id],
+  }),
+  delivery: one(deliveries),
+}));
+
+export const deliveriesRelations = relations(deliveries, ({ one }) => ({
+  order: one(orders, {
+    fields: [deliveries.orderId],
+    references: [orders.id],
+  }),
+  deliveryUser: one(users, {
+    fields: [deliveries.deliveryUserId],
+    references: [users.id],
+  }),
+}));
+
+export const toolReservationsRelations = relations(toolReservations, ({ one }) => ({
+  toolItem: one(toolItems, {
+    fields: [toolReservations.toolItemId],
+    references: [toolItems.id],
+  }),
+  user: one(users, {
+    fields: [toolReservations.userId],
+    references: [users.id],
+  }),
+}));
+
+export const attributesRelations = relations(attributes, ({ one, many }) => ({
+  unit: one(attributeUnits, {
+    fields: [attributes.unitId],
+    references: [attributeUnits.id],
+  }),
+  toolAttributes: many(toolAttributes),
+  categoryAttributes: many(categoryAttributes),
+}));
+
+export const attributeUnitsRelations = relations(attributeUnits, ({ many }) => ({
+  attributes: many(attributes),
+}));

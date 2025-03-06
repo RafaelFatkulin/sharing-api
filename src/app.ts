@@ -1,0 +1,27 @@
+import type { OpenAPIHono } from "@hono/zod-openapi";
+import { configureOpenAPI } from "@lib/configure-open-api";
+import { createApp } from "@lib/create-app";
+import { env } from "hono/adapter";
+import { serveStatic } from "hono/bun";
+
+export const app = createApp()
+
+const routes: OpenAPIHono[] = []
+
+configureOpenAPI(app)
+
+routes.forEach(route => {
+    app.route('/', route)
+})
+
+app.get('/env', (c) => {
+    const { DATABASE_URL } = env<{ DATABASE_URL: string }>(c)
+    return c.text(DATABASE_URL)
+})
+
+app.use('/uploads/*', serveStatic({ root: './' }))
+
+app.openAPIRegistry.registerComponent('securitySchemes', 'Bearer', {
+    type: 'http',
+    scheme: 'bearer'
+})
