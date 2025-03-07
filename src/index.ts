@@ -1,6 +1,6 @@
-import { app } from "app";
+import { app } from 'app'
 
 export default {
   port: 8000,
-  fetch: app.fetch
+  fetch: app.fetch,
 }

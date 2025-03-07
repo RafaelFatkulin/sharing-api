@@ -1,31 +1,16 @@
 {
   "compilerOptions": {
-    // Enable latest features
-    "lib": ["ESNext", "DOM"],
     "target": "ESNext",
-    "module": "ESNext",
-    "moduleDetection": "force",
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
-    "allowJs": true,
-
-    // Bundler mode
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
-    "noEmit": true,
-
-    // Best practices
-    "strict": true,
-    "skipLibCheck": true,
-    "noFallthroughCasesInSwitch": true,
-
-    // Some stricter flags (disabled by default)
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noPropertyAccessFromIndexSignature": false,
+    // Enable latest features
+    "lib": ["ESNext", "DOM"],
+    "moduleDetection": "force",
 
     "baseUrl": "./src",
+    "module": "ESNext",
+    // Bundler mode
+    "moduleResolution": "bundler",
     "paths": {
       "@database": ["database"],
       "@database/*": ["database/*"],
@@ -38,5 +23,19 @@
       "@utils": ["utils"],
       "@utils/*": ["utils/*"]
     },
+    "allowImportingTsExtensions": true,
+    "allowJs": true,
+
+    // Best practices
+    "strict": true,
+    "noFallthroughCasesInSwitch": true,
+
+    "noPropertyAccessFromIndexSignature": false,
+    // Some stricter flags (disabled by default)
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noEmit": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true
   }
 }
