@@ -1,11 +1,12 @@
 import type { User } from '@modules/users'
 import type { AppRouteHandler } from 'types'
 import type { Profile, Refresh, Signin, Signout, Signup, UpdateProfile } from './routes'
-import { createUser, getUserByEmail } from '@modules/users'
+import { createUser, getUser, getUserByEmail, updateUser } from '@modules/users'
 import { createErrorResponse, createSuccessResponse } from '@utils/response'
 import { HttpStatusCodes } from '@utils/status-codes'
 import { createRefrehToken, getRefreshToken, revokeRefreshToken } from './services'
 import { generateTokens } from './utils'
+import type { Context } from 'hono'
 
 const signup: AppRouteHandler<Signup> = async (c) => {
   const data = c.req.valid('json')
@@ -21,10 +22,7 @@ const signup: AppRouteHandler<Signup> = async (c) => {
     )
   }
 
-  const [user] = await createUser({
-    ...data,
-    role: 'superadmin' as User['role'],
-  })
+  const [user] = await createUser(data)
 
   if (!user) {
     return c.json(
@@ -141,11 +139,115 @@ const signout: AppRouteHandler<Signout> = async (c) => {
   )
 }
 
-const refresh: AppRouteHandler<Refresh> = async (c) => { }
+const refresh: AppRouteHandler<Refresh> = async (c) => {
+  const { refreshToken } = c.req.valid('json')
 
-const profile: AppRouteHandler<Profile> = async (c) => { }
+  if (!refreshToken) {
+    return c.json(
+      createErrorResponse({
+        message: 'Недействительный токен'
+      }),
+      HttpStatusCodes.UNAUTHORIZED
+    )
+  }
 
-const updateProfile: AppRouteHandler<UpdateProfile> = async (c) => { }
+  const exisitingRefreshToken = await getRefreshToken(refreshToken, false)
+
+  if (!exisitingRefreshToken) {
+    return c.json(
+      createErrorResponse({ message: 'Недействительный токен' }),
+      HttpStatusCodes.UNAUTHORIZED
+    )
+  }
+
+  const user = await getUser(exisitingRefreshToken.userId!)
+
+  if (!user) {
+    return c.json(
+      createErrorResponse({ message: 'Недействительный токен' }),
+      HttpStatusCodes.UNAUTHORIZED
+    )
+  }
+
+  const {
+    at,
+    rt: newRefreshToken,
+    rtExpiresAt,
+    atExpiresAt
+  } = await generateTokens(user.id, user.role)
+
+  await revokeRefreshToken(exisitingRefreshToken.id)
+
+  await createRefrehToken({
+    token: newRefreshToken,
+    userId: user.id,
+    expiresAt: rtExpiresAt
+  })
+
+  return c.json(
+    createSuccessResponse({
+      data: {
+        accessToken: at,
+        refreshToken: newRefreshToken,
+        accessExpiresAt: atExpiresAt,
+        refreshExpiresAt: rtExpiresAt,
+        user: {
+          id: user.id,
+          fullName: user.fullName,
+          email: user.email,
+          phone: user.phone ? user.phone : undefined,
+          role: user.role,
+        },
+      },
+    }),
+    200,
+  )
+}
+
+const profile: AppRouteHandler<Profile> = async (c) => {
+  const user = c.get('user')
+
+  if (!user) {
+    return c.json(
+      createErrorResponse({ message: 'Пользователь не найден' }),
+      HttpStatusCodes.UNAUTHORIZED
+    )
+  }
+
+  return c.json(createSuccessResponse({ data: user }), HttpStatusCodes.OK)
+}
+
+const updateProfile: AppRouteHandler<UpdateProfile> = async (c) => {
+  const data = c.req.valid('json')
+  const user = c.get('user')
+
+  if (!user) {
+    return c.json(
+      createErrorResponse({ message: 'Пользователь не найден' }),
+      HttpStatusCodes.UNAUTHORIZED
+    )
+  }
+
+  try {
+    const [updatedUser] = await updateUser(user.id, data)
+
+    return c.json(
+      createSuccessResponse({
+        message: `Информация аккаунта обновлена`,
+        data: updatedUser,
+      }),
+      HttpStatusCodes.OK,
+    )
+  }
+  catch {
+    return c.json(
+      createErrorResponse({
+        message: 'Ошибка при редактировании аккаунта',
+      }),
+      HttpStatusCodes.BAD_REQUEST,
+    )
+  }
+}
 
 export const handlers = {
   signup,
