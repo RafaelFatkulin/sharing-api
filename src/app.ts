@@ -1,6 +1,6 @@
-import type { OpenAPIHono } from '@hono/zod-openapi'
 import { configureOpenAPI } from '@lib/configure-open-api'
 import { createApp } from '@lib/create-app'
+import { auth } from '@modules/auth'
 import { users } from '@modules/users'
 import { env } from 'hono/adapter'
 import { serveStatic } from 'hono/bun'
@@ -8,7 +8,8 @@ import { serveStatic } from 'hono/bun'
 export const app = createApp()
 
 const routes = [
-  users
+  users,
+  auth,
 ]
 
 configureOpenAPI(app)
