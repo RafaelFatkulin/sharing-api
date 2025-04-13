@@ -1,7 +1,20 @@
-import { Elysia } from "elysia";
+import {Elysia} from "elysia";
+import {serverConfig} from "./core/config";
+import swagger from "@elysiajs/swagger";
+import {usersRoute} from "./features/users/route";
 
-const app = new Elysia().get("/", () => "Hello Elysia").listen(3000);
+const plugin = new Elysia({name: 'plugin'})
+    .macro({
+        hi(word: string) {
+            return {
+                beforeHandle() {
+                    console.log(word);
+                }
+            }
+        }
+    })
 
-console.log(
-  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
-);
+const app = new Elysia()
+    .use(swagger())
+    .use(usersRoute)
+    .listen(serverConfig.port);
