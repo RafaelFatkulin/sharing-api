@@ -4,7 +4,7 @@ import {
   updateUserSchema,
   userResponseSchema,
   userSchema,
-} from "./types";
+} from "./users.types";
 
 export const UsersModel = new Elysia().model({
   user: userSchema,

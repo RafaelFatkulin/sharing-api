@@ -1,13 +1,20 @@
-import { CreateUser, createUserSchema, UserResponse } from "./types";
+import {
+  CreateUser,
+  createUserSchema,
+  UpdateUser,
+  UserResponse,
+} from "./users.types";
 import { InternalServerError, NotFoundError } from "elysia";
 import { UsersRepository } from "./users.repository";
 import { UnauthorizedError } from "@core/core.errors";
+import { password } from "bun";
+import { usersToResponse, userToResponse } from "./users.helpers";
 
 export class UsersService {
   constructor(private repository: UsersRepository) {}
 
   async getAll() {
-    return await this.repository.getAll();
+    return usersToResponse(await this.repository.getAll());
   }
 
   async getById(id: number) {
@@ -17,17 +24,11 @@ export class UsersService {
       throw new NotFoundError(`User with id=#${id} not found`);
     }
 
-    return user;
+    return userToResponse(user);
   }
 
   async getByEmail(email: string) {
-    const user = this.repository.getByEmail(email);
-
-    if (!user) {
-      throw new NotFoundError(`User with email=#${email} not found`);
-    }
-
-    return user;
+    return await this.repository.getByEmail(email);
   }
 
   async create(data: CreateUser): Promise<UserResponse> {
@@ -46,7 +47,31 @@ export class UsersService {
       throw new InternalServerError("Error while creating user");
     }
 
-    const { password, createdAt, ...userResponse } = user;
-    return userResponse as UserResponse;
+    return userToResponse(user);
+  }
+
+  async update(id: number, data: UpdateUser) {
+    await this.getById(id);
+
+    const user = await this.repository.update(id, {
+      ...data,
+      password: data.password
+        ? await Bun.password.hash(data.password, "bcrypt")
+        : undefined,
+    });
+
+    if (!user) {
+      throw new InternalServerError("Error while updating user");
+    }
+
+    return userToResponse(user);
+  }
+
+  async delete(id: number) {
+    await this.getById(id);
+
+    const user = await this.repository.delete(id);
+
+    return userToResponse(user);
   }
 }

@@ -1,12 +1,12 @@
 import { Elysia } from "elysia";
-import { serverConfig } from "./core/config";
+import { serverConfig } from "@core/config";
 import swagger from "@elysiajs/swagger";
-import { usersRoute } from "./features/users/route";
 import {
   ConflictError,
   ForbiddenError,
   UnauthorizedError,
 } from "@core/core.errors";
+import { usersRoute } from "@features/users/users.route";
 
 new Elysia()
   .use(swagger())
@@ -26,7 +26,6 @@ new Elysia()
         }>;
       };
 
-      // Форматируем ошибки валидации в структурированный вид
       const details = validationError.all.reduce((acc, err) => {
         if (err.path) {
           const key = err.path.toString().split("/")[1] || "unknown";
@@ -53,7 +52,6 @@ new Elysia()
         ? (error as { message: string }).message
         : "An unknown error occurred";
 
-    // Формирование ответа
     const response: Record<string, any> = {
       error: errorMessage,
     };
