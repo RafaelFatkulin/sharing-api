@@ -2,66 +2,69 @@ import { Elysia } from "elysia";
 import { serverConfig } from "./core/config";
 import swagger from "@elysiajs/swagger";
 import { usersRoute } from "./features/users/route";
-import { UnauthorizedError } from "@core/core.errors";
+import {
+  ConflictError,
+  ForbiddenError,
+  UnauthorizedError,
+} from "@core/core.errors";
 
 new Elysia()
-    .use(swagger())
-    .error({
-        UnauthorizedError
-    })
-    .onError(({ error, code, set }) => {
+  .use(swagger())
+  .error({
+    UnauthorizedError,
+    ForbiddenError,
+    ConflictError,
+  })
+  .onError(({ error, code, set }) => {
+    if (code === "VALIDATION") {
+      set.status = 400;
 
-        if (code === 'VALIDATION') {
-            set.status = 400;
+      const validationError = error as {
+        all: Array<{
+          path?: string;
+          message: string;
+        }>;
+      };
 
-            const validationError = error as {
-                all: Array<{
-                    path?: string;
-                    message: string;
-                }>;
-            };
-
-            // Форматируем ошибки валидации в структурированный вид
-            const details = validationError.all.reduce((acc, err) => {
-                if (err.path) {
-                    const key = err.path.toString().split('/')[1] || 'unknown';
-                    if (!acc[key]) acc[key] = [];
-                    acc[key].push(err.message);
-                } else {
-                    if (!acc['unknown']) acc['unknown'] = [];
-                    acc['unknown'].push(err.message);
-                }
-                return acc;
-            }, {} as Record<string, string[]>);
-
-            return {
-                error: 'Validation failed',
-                details,
-            };
+      // Форматируем ошибки валидации в структурированный вид
+      const details = validationError.all.reduce((acc, err) => {
+        if (err.path) {
+          const key = err.path.toString().split("/")[1] || "unknown";
+          if (!acc[key]) acc[key] = [];
+          acc[key].push(err.message);
+        } else {
+          if (!acc["unknown"]) acc["unknown"] = [];
+          acc["unknown"].push(err.message);
         }
+        return acc;
+      }, {} as Record<string, string[]>);
 
-        set.status =
-            code === 'NOT_FOUND' ? 404 :
-                code === 'INTERNAL_SERVER_ERROR' ? 500 :
-                    500;
+      return {
+        error: "Validation failed",
+        details,
+      };
+    }
 
-        const errorMessage =
-            typeof error === 'object' && error !== null && 'message' in error
-                ? (error as { message: string }).message
-                : 'An unknown error occurred';
+    set.status =
+      code === "NOT_FOUND" ? 404 : code === "INTERNAL_SERVER_ERROR" ? 500 : 500;
 
-        // Формирование ответа
-        const response: Record<string, any> = {
-            error: errorMessage,
-        };
+    const errorMessage =
+      typeof error === "object" && error !== null && "message" in error
+        ? (error as { message: string }).message
+        : "An unknown error occurred";
 
-        if (process.env.NODE_ENV === 'development') {
-            if (typeof error === 'object' && error !== null && 'stack' in error) {
-                response.stack = (error as { stack: string }).stack;
-            }
-        }
+    // Формирование ответа
+    const response: Record<string, any> = {
+      error: errorMessage,
+    };
 
-        return response;
-    })
-    .use(usersRoute)
-    .listen(serverConfig.port);
+    if (process.env.NODE_ENV === "development") {
+      if (typeof error === "object" && error !== null && "stack" in error) {
+        response.stack = (error as { stack: string }).stack;
+      }
+    }
+
+    return response;
+  })
+  .use(usersRoute)
+  .listen(serverConfig.port);
