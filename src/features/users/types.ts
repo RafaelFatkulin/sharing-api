@@ -1,14 +1,16 @@
-import {rolesEnum, users} from "./schema";
-import {createInsertSchema, createSelectSchema, createUpdateSchema, EnumValuesToEnum} from "drizzle-typebox";
-import {Static, t} from "elysia";
+import { rolesEnum, users } from "./schema";
+import { createInsertSchema, createSelectSchema, createUpdateSchema, EnumValuesToEnum } from "drizzle-typebox";
+import { Static, t } from "elysia";
 
 const _user = createSelectSchema(users)
 const _createUser = createInsertSchema(users, {
-    email: t.String({format: 'email'}),
+    fullName: t.String({ minLength: 8, maxLength: 255 }),
+    email: t.String({ format: 'email' }),
     role: t.UnionEnum(rolesEnum.enumValues),
+    password: t.String({ minLength: 8, maxLength: 255 })
 })
 const _updateUser = createUpdateSchema(users, {
-    email: t.String({format: 'email'}),
+    email: t.String({ format: 'email' }),
     role: t.UnionEnum(rolesEnum.enumValues),
 })
 
