@@ -17,12 +17,12 @@ export const usersRoute = new Elysia({ prefix: "/users", tags: ["Users"] })
   })
   .get(
     "/:id",
-    async ({ params, service, set, error }) => {
+    async ({ params, service, set }) => {
       const user = await service.getById(params.id);
 
-      return {
-        user,
-      };
+      set.status = 200;
+
+      return { user };
     },
     {
       params: "param.id",
@@ -54,6 +54,10 @@ export const usersRoute = new Elysia({ prefix: "/users", tags: ["Users"] })
 
       return {
         user,
+        test: {
+          message: "test",
+          value: 123,
+        },
         message: `User's data updated successfully`,
       };
     },

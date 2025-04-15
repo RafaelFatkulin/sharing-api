@@ -64,5 +64,48 @@ new Elysia()
 
     return response;
   })
+  .mapResponse(({ response, set }) => {
+    if (response === null || response === undefined) {
+      return new Response(
+        JSON.stringify({
+          data: null,
+          message: "No content",
+          timestamp: new Date().toISOString(),
+        }),
+        {
+          headers: { "Content-Type": "application/json" },
+          status: 204,
+        }
+      );
+    }
+
+    let message = "Success";
+    let data = response;
+
+    if (typeof response === "object" && !Array.isArray(response)) {
+      if ("message" in response) {
+        message = response.message as string;
+        // Remove message from data to avoid duplication
+        const { message: _, ...rest } = response;
+        data = rest;
+      }
+    }
+
+    const wrappedResponse = {
+      data,
+      message,
+      timestamp: new Date().toISOString(),
+    };
+
+    const statusCode =
+      typeof set.status === "string"
+        ? parseInt(set.status, 10) || 200
+        : set.status || 200;
+
+    return new Response(JSON.stringify(wrappedResponse), {
+      headers: { "Content-Type": "application/json" },
+      status: statusCode,
+    });
+  })
   .use(usersRoute)
   .listen(serverConfig.port);
