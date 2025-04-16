@@ -10,11 +10,13 @@ interface IUsersRepository
 
 export class UsersRepository implements IUsersRepository {
   async getAll() {
-    return db.query.users.findMany({
+    const users = db.query.users.findMany({
       orderBy(fields, operators) {
         return operators.desc(fields.createdAt);
       },
     });
+
+    return users ?? null
   }
 
   async getById(id: number) {

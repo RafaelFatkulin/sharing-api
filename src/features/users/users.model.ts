@@ -13,4 +13,7 @@ export const UsersModel = new Elysia().model({
   "user.response": t.Object({
     user: userResponseSchema,
   }),
+  "user.array-response": t.Object({
+    users: t.Array(userResponseSchema)
+  })
 });

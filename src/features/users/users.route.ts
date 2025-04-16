@@ -3,6 +3,7 @@ import { UsersService } from "./users.service";
 import { UsersModel } from "./users.model";
 import { CoreModel } from "@core/model";
 import { UsersRepository } from "./users.repository";
+import { trans } from '@core/locales'
 
 export const usersRoute = new Elysia({ prefix: "/users", tags: ["Users"] })
   .use(CoreModel)
@@ -10,10 +11,15 @@ export const usersRoute = new Elysia({ prefix: "/users", tags: ["Users"] })
   .decorate("service", new UsersService(new UsersRepository()))
   .get("/", async ({ service, set }) => {
     set.status = 200;
+    const users = await service.getAll()
 
     return {
-      users: await service.getAll(),
+      users,
     };
+  }, {
+    response: {
+      200: "user.array-response"
+    }
   })
   .get(
     "/:id",
@@ -26,6 +32,10 @@ export const usersRoute = new Elysia({ prefix: "/users", tags: ["Users"] })
     },
     {
       params: "param.id",
+      response: {
+        200: "user.response",
+        404: "error"
+      }
     }
   )
   .post(
@@ -54,11 +64,7 @@ export const usersRoute = new Elysia({ prefix: "/users", tags: ["Users"] })
 
       return {
         user,
-        test: {
-          message: "test",
-          value: 123,
-        },
-        message: `User's data updated successfully`,
+        message: trans('users.messages.updated'),
       };
     },
     {
@@ -75,7 +81,7 @@ export const usersRoute = new Elysia({ prefix: "/users", tags: ["Users"] })
 
       return {
         user,
-        message: `User deleted successfully`,
+        message: trans('users.messages.updated'),
       };
     },
     {

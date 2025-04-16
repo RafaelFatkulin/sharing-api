@@ -9,5 +9,5 @@ export const userToResponse = (user: User) => {
 };
 
 export const usersToResponse = (users: User[]) => {
-  return users.map((user: User) => userToResponse(user)) as UserResponse[];
+  return users.map((user: User) => userToResponse(user)) as UserResponse[] || [];
 };

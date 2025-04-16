@@ -1,4 +1,4 @@
-import {env} from "bun";
+import { env } from "bun";
 
 export const serverConfig = {
     port: env.PORT || 3000,
@@ -12,11 +12,11 @@ export const jwtConfig = {
     refreshExpiresIn: '7d'
 }
 
-if(serverConfig.env === 'development') {
+if (serverConfig.env === 'development') {
     const requiredVars = ['DATABASE_URL', 'JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET'];
 
-    for(const requiredVar of requiredVars) {
-        if(!env[requiredVar]) {
+    for (const requiredVar of requiredVars) {
+        if (!env[requiredVar]) {
             console.warn(`⚠️ Переменная ${requiredVar} не определена в .env!`)
         }
     }

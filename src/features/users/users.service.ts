@@ -1,27 +1,25 @@
 import {
   CreateUser,
-  createUserSchema,
   UpdateUser,
   UserResponse,
 } from "./users.types";
 import { InternalServerError, NotFoundError } from "elysia";
 import { UsersRepository } from "./users.repository";
-import { UnauthorizedError } from "@core/core.errors";
-import { password } from "bun";
 import { usersToResponse, userToResponse } from "./users.helpers";
+import { trans } from "@core/locales";
 
 export class UsersService {
-  constructor(private repository: UsersRepository) {}
+  constructor(private repository: UsersRepository) { }
 
   async getAll() {
-    return usersToResponse(await this.repository.getAll());
+    return usersToResponse(await this.repository.getAll())
   }
 
   async getById(id: number) {
     const user = await this.repository.getById(id);
 
     if (!user) {
-      throw new NotFoundError(`User with id=#${id} not found`);
+      throw new NotFoundError(trans('users.errors.not-found', { id }));
     }
 
     return userToResponse(user);
@@ -35,7 +33,7 @@ export class UsersService {
     const existingUser = await this.getByEmail(data.email);
 
     if (existingUser) {
-      throw new NotFoundError(`Email ${data.email} already in use`);
+      throw new NotFoundError(trans('users.errors.email-in-use', { email: data.email }));
     }
 
     const user = await this.repository.create({
@@ -44,7 +42,7 @@ export class UsersService {
     });
 
     if (!user) {
-      throw new InternalServerError("Error while creating user");
+      throw new InternalServerError(trans('users.errors.create'));
     }
 
     return userToResponse(user);
@@ -61,7 +59,7 @@ export class UsersService {
     });
 
     if (!user) {
-      throw new InternalServerError("Error while updating user");
+      throw new InternalServerError(trans('users.errors.update'));
     }
 
     return userToResponse(user);

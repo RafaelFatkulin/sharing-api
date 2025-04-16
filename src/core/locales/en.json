@@ -1,0 +1,11 @@
+{
+    "errors": {
+      "not-found": "Not found",
+      "validation": "Validation failed"
+    },
+    "users": {
+        "errors": {
+            "not-found": "User with ID={{id}} not found"
+        }
+    }
+  }
