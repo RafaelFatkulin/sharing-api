@@ -2,7 +2,7 @@ import "dotenv/config";
 import { drizzle } from "drizzle-orm/postgres-js";
 
 import * as users from "../features/users/users.schema";
-import * as refreshTokens from "../features/auth/schema";
+import * as refreshTokens from "../features/auth/auth.schema";
 
 const schema = {
   ...users,

@@ -16,4 +16,4 @@ export const UsersModel = new Elysia().model({
   "user.array-response": t.Object({
     users: t.Array(userResponseSchema)
   })
-});
+}).as('scoped');

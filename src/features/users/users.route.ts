@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { UsersService } from "./users.service";
+import { UsersService, usersServicePlugin } from "./users.service";
 import { UsersModel } from "./users.model";
 import { CoreModel } from "@core/model";
 import { UsersRepository } from "./users.repository";
@@ -8,10 +8,11 @@ import { trans } from '@core/locales'
 export const usersRoute = new Elysia({ prefix: "/users", tags: ["Users"] })
   .use(CoreModel)
   .use(UsersModel)
-  .decorate("service", new UsersService(new UsersRepository()))
-  .get("/", async ({ service, set }) => {
+  .use(usersServicePlugin)
+
+  .get("/", async ({ usersService, set }) => {
     set.status = 200;
-    const users = await service.getAll()
+    const users = await usersService.getAll()
 
     return {
       users,
@@ -23,8 +24,8 @@ export const usersRoute = new Elysia({ prefix: "/users", tags: ["Users"] })
   })
   .get(
     "/:id",
-    async ({ params, service, set }) => {
-      const user = await service.getById(params.id);
+    async ({ params, usersService, set }) => {
+      const user = await usersService.getById(params.id);
 
       set.status = 200;
 
@@ -40,12 +41,12 @@ export const usersRoute = new Elysia({ prefix: "/users", tags: ["Users"] })
   )
   .post(
     "/",
-    async ({ set, body, service }) => {
-      const user = await service.create(body);
+    async ({ set, body, usersService }) => {
+      const createdUser = await usersService.create(body);
       set.status = 201;
 
       return {
-        user,
+        user: createdUser,
       };
     },
     {
@@ -57,8 +58,8 @@ export const usersRoute = new Elysia({ prefix: "/users", tags: ["Users"] })
   )
   .patch(
     "/:id",
-    async ({ set, params, body, service }) => {
-      const user = await service.update(params.id, body);
+    async ({ set, params, body, usersService }) => {
+      const user = await usersService.update(params.id, body);
 
       set.status = 200;
 
@@ -74,8 +75,8 @@ export const usersRoute = new Elysia({ prefix: "/users", tags: ["Users"] })
   )
   .delete(
     "/:id",
-    async ({ set, params, service }) => {
-      const user = await service.delete(params.id);
+    async ({ set, params, usersService }) => {
+      const user = await usersService.delete(params.id);
 
       set.status = 200;
 

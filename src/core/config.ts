@@ -6,14 +6,13 @@ export const serverConfig = {
 }
 
 export const jwtConfig = {
-    accessSecret: env.JWT_ACCESS_SECRET,
-    refreshSecret: env.JWT_REFRESH_SECRET,
-    accessExpiresIn: '15m',
-    refreshExpiresIn: '7d'
+    secret: env.JWT_SECRET!,
+    accessExpiresIn: 15 * 60,
+    refreshExpiresIn: 7 * 24 * 60 * 60
 }
 
 if (serverConfig.env === 'development') {
-    const requiredVars = ['DATABASE_URL', 'JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET'];
+    const requiredVars = ['DATABASE_URL', 'JWT_SECRET'];
 
     for (const requiredVar of requiredVars) {
         if (!env[requiredVar]) {

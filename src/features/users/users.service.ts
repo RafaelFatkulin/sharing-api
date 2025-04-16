@@ -3,7 +3,7 @@ import {
   UpdateUser,
   UserResponse,
 } from "./users.types";
-import { InternalServerError, NotFoundError } from "elysia";
+import Elysia, { InternalServerError, NotFoundError } from "elysia";
 import { UsersRepository } from "./users.repository";
 import { usersToResponse, userToResponse } from "./users.helpers";
 import { trans } from "@core/locales";
@@ -73,3 +73,11 @@ export class UsersService {
     return userToResponse(user);
   }
 }
+export const usersServicePlugin = new Elysia({ name: 'users.service' })
+  .decorate(
+    'usersService',
+    new UsersService(
+      new UsersRepository()
+    )
+  )
+  .as('scoped')

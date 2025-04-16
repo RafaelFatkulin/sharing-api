@@ -2,12 +2,20 @@ import { Elysia } from "elysia";
 import { serverConfig } from "@core/config";
 import swagger from "@elysiajs/swagger";
 import {
+  BadRequestError,
   ConflictError,
   ForbiddenError,
   UnauthorizedError,
 } from "@core/core.errors";
 import { usersRoute } from "@features/users/users.route";
 import { trans } from "@core/locales";
+import { authRoute } from "@features/auth/auth.route";
+
+const getErrorMessage = (error: Readonly<Error>, defaultMessage: string) => {
+  return typeof error === "object" && error !== null && "message" in error
+    ? (error as { message: string }).message
+    : defaultMessage;
+}
 
 const app = new Elysia()
   .use(swagger({ path: '/swagger' }))
@@ -15,8 +23,50 @@ const app = new Elysia()
     UnauthorizedError,
     ForbiddenError,
     ConflictError,
+    BadRequestError
   })
   .onError(({ error, code, set }) => {
+    console.log(code);
+    if (code === 'UnauthorizedError') {
+      set.status = 401
+
+      const errorMessage = getErrorMessage(error, 'Unauthorized')
+
+      return {
+        error: errorMessage
+      }
+    }
+
+    if (code === 'ForbiddenError') {
+      set.status = 403
+
+      const errorMessage = getErrorMessage(error, 'Forbidden')
+
+      return {
+        error: errorMessage
+      }
+    }
+
+    if (code === 'ConflictError') {
+      set.status = 409
+
+      const errorMessage = getErrorMessage(error, 'Unauthorized')
+
+      return {
+        error: errorMessage
+      }
+    }
+
+    if (code === "BadRequestError") {
+      set.status = 500
+
+      const errorMessage = getErrorMessage(error, 'Bad Request')
+
+      return {
+        error: errorMessage
+      }
+    }
+
     if (code === "VALIDATION") {
       set.status = 400;
 
@@ -48,10 +98,7 @@ const app = new Elysia()
     set.status =
       code === "NOT_FOUND" ? 404 : code === "INTERNAL_SERVER_ERROR" ? 500 : 500;
 
-    const errorMessage =
-      typeof error === "object" && error !== null && "message" in error
-        ? (error as { message: string }).message
-        : "An unknown error occurred";
+    const errorMessage = getErrorMessage(error as Error, "An unknown error occurred");
 
     const response: Record<string, any> = {
       error: errorMessage,
@@ -129,6 +176,7 @@ const app = new Elysia()
     });
   })
   .use(usersRoute)
+  .use(authRoute)
 
 
 const startServer = async () => {
