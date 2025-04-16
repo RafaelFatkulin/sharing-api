@@ -15,56 +15,55 @@ const getErrorMessage = (error: Readonly<Error>, defaultMessage: string) => {
   return typeof error === "object" && error !== null && "message" in error
     ? (error as { message: string }).message
     : defaultMessage;
-}
+};
 
 const app = new Elysia()
-  .use(swagger({ path: '/swagger' }))
+  .use(swagger({ path: "/swagger" }))
   .error({
     UnauthorizedError,
     ForbiddenError,
     ConflictError,
-    BadRequestError
+    BadRequestError,
   })
   .onError(({ error, code, set }) => {
-    console.log(code);
-    if (code === 'UnauthorizedError') {
-      set.status = 401
+    if (code === "UnauthorizedError") {
+      set.status = 401;
 
-      const errorMessage = getErrorMessage(error, 'Unauthorized')
+      const errorMessage = getErrorMessage(error, "Unauthorized");
 
       return {
-        error: errorMessage
-      }
+        error: errorMessage,
+      };
     }
 
-    if (code === 'ForbiddenError') {
-      set.status = 403
+    if (code === "ForbiddenError") {
+      set.status = 403;
 
-      const errorMessage = getErrorMessage(error, 'Forbidden')
+      const errorMessage = getErrorMessage(error, "Forbidden");
 
       return {
-        error: errorMessage
-      }
+        error: errorMessage,
+      };
     }
 
-    if (code === 'ConflictError') {
-      set.status = 409
+    if (code === "ConflictError") {
+      set.status = 409;
 
-      const errorMessage = getErrorMessage(error, 'Unauthorized')
+      const errorMessage = getErrorMessage(error, "Unauthorized");
 
       return {
-        error: errorMessage
-      }
+        error: errorMessage,
+      };
     }
 
     if (code === "BadRequestError") {
-      set.status = 500
+      set.status = 500;
 
-      const errorMessage = getErrorMessage(error, 'Bad Request')
+      const errorMessage = getErrorMessage(error, "Bad Request");
 
       return {
-        error: errorMessage
-      }
+        error: errorMessage,
+      };
     }
 
     if (code === "VALIDATION") {
@@ -98,7 +97,10 @@ const app = new Elysia()
     set.status =
       code === "NOT_FOUND" ? 404 : code === "INTERNAL_SERVER_ERROR" ? 500 : 500;
 
-    const errorMessage = getErrorMessage(error as Error, "An unknown error occurred");
+    const errorMessage = getErrorMessage(
+      error as Error,
+      "An unknown error occurred"
+    );
 
     const response: Record<string, any> = {
       error: errorMessage,
@@ -113,7 +115,7 @@ const app = new Elysia()
     return response;
   })
   .mapResponse(({ request, response, set }) => {
-    if (new URL(request.url).pathname.startsWith('/swagger')) {
+    if (new URL(request.url).pathname.startsWith("/swagger")) {
       return response as Response;
     }
 
@@ -131,11 +133,11 @@ const app = new Elysia()
     }
 
     if (typeof response === "object" && !Array.isArray(response)) {
-      if ('error' in response || 'details' in response || 'cause' in response) {
+      if ("error" in response || "details" in response || "cause" in response) {
         const errorResponse = {
-          details: 'details' in response ? response.details : undefined,
-          cause: 'cause' in response ? response.cause : undefined,
-          error: 'error' in response ? response.error : 'An error occurred',
+          details: "details" in response ? response.details : undefined,
+          cause: "cause" in response ? response.cause : undefined,
+          error: "error" in response ? response.error : "An error occurred",
         };
 
         const statusCode =
@@ -162,7 +164,7 @@ const app = new Elysia()
 
     const wrappedResponse = {
       data,
-      message
+      message,
     };
 
     const statusCode =
@@ -176,18 +178,17 @@ const app = new Elysia()
     });
   })
   .use(usersRoute)
-  .use(authRoute)
-
+  .use(authRoute);
 
 const startServer = async () => {
   try {
     app.listen(serverConfig.port, ({ hostname, port }) => {
-      console.info(`🦊 Server running at http://${hostname}:${port}`)
-    })
+      console.info(`🦊 Server running at http://${hostname}:${port}`);
+    });
   } catch (err) {
-    console.error('Failed to start server:', err)
-    process.exit(1)
+    console.error("Failed to start server:", err);
+    process.exit(1);
   }
-}
+};
 
-startServer()
+startServer();

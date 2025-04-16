@@ -9,84 +9,87 @@ import Elysia from "elysia";
 import { userToResponse } from "@features/users/users.helpers";
 
 export class AuthService {
-    constructor(
-        private repository: AuthRepository,
-        private usersRepository: UsersRepository
-    ) { }
+  constructor(
+    private repository: AuthRepository,
+    private usersRepository: UsersRepository
+  ) {}
 
-    async getUserByEmail(email: string) {
-        const user = await this.usersRepository.getByEmail(email)
+  async getUserByEmail(email: string) {
+    const user = await this.usersRepository.getByEmail(email);
 
-        if (!user) {
-            throw new BadRequestError(trans('auth.errors.incorrect'));
-        }
-
-        return user
+    if (!user) {
+      throw new BadRequestError(trans("auth.errors.incorrect"));
     }
 
-    async comparePasswords(comparable: string, original: string) {
-        const isPasswordsMatch = await Bun.password.verify(
-            comparable,
-            original,
-            'bcrypt'
-        )
+    return user;
+  }
 
-        if (!isPasswordsMatch) {
-            throw new BadRequestError(trans('auth.errors.incorrect'));
-        }
+  async comparePasswords(comparable: string, original: string) {
+    const isPasswordsMatch = await Bun.password.verify(
+      comparable,
+      original,
+      "bcrypt"
+    );
 
-        return
+    if (!isPasswordsMatch) {
+      throw new BadRequestError(trans("auth.errors.incorrect"));
     }
 
-    async createRefreshToken(userId: number, token: string) {
-        const refreshToken = await this.repository.createRefreshToken(
-            userId,
-            token
-        )
+    return;
+  }
 
-        console.log({ refreshToken });
+  async createRefreshToken(userId: number, token: string) {
+    console.log({ token });
+    await this.repository.deleteRefreshToken(token);
 
+    const refreshToken = await this.repository.createRefreshToken(
+      userId,
+      token
+    );
 
-        if (!refreshToken) {
-            throw new BadRequestError(trans('auth.errors.token-error'))
-        }
-
-        return
+    if (!refreshToken) {
+      throw new BadRequestError(trans("auth.errors.token-error"));
     }
 
-    async signin({ email, password }: { email: string, password: string }, jwt: JWT) {
-        const user = await this.getUserByEmail(email)
-        await this.comparePasswords(password, user.password)
+    return;
+  }
 
-        const accessJWTToken = await jwt.sign({
-            sub: String(user.id),
-            exp: getExpTimestamp(jwtConfig.accessExpiresIn)
-        })
-        console.log({ accessJWTToken });
+  async signin(
+    { email, password }: { email: string; password: string },
+    jwt: JWT,
+    refreshJwt: JWT
+  ) {
+    const user = await this.getUserByEmail(email);
+    await this.comparePasswords(password, user.password);
 
-        const refreshJWTToken = await jwt.sign({
-            sub: String(user.id),
-            exp: getExpTimestamp(jwtConfig.refreshExpiresIn)
-        })
-        console.log({ refreshJWTToken });
+    const accessJWTToken = await jwt.sign({
+      sub: String(user.id),
+      exp: getExpTimestamp(jwtConfig.accessExpiresIn),
+    });
 
+    const refreshJWTToken = await refreshJwt.sign({
+      sub: String(user.id),
+      exp: getExpTimestamp(jwtConfig.refreshExpiresIn),
+    });
 
-        await this.createRefreshToken(user.id, refreshJWTToken)
+    console.log(
+      getExpTimestamp(jwtConfig.accessExpiresIn),
+      getExpTimestamp(jwtConfig.refreshExpiresIn)
+    );
 
-        return {
-            user: userToResponse(user),
-            accessToken: accessJWTToken,
-            refreshToken: refreshJWTToken
-        }
-    }
+    await this.createRefreshToken(user.id, refreshJWTToken);
+
+    return {
+      user: userToResponse(user),
+      accessToken: accessJWTToken,
+      refreshToken: refreshJWTToken,
+    };
+  }
 }
 
-export const authServicePlugin = new Elysia({ name: 'auth.service' })
-    .decorate(
-        'authService',
-        new AuthService(
-            new AuthRepository(),
-            new UsersRepository()
-        )
-    )
-    .as('scoped')
+export const authServicePlugin = new Elysia({ name: "auth.service" })
+  .decorate(
+    "authService",
+    new AuthService(new AuthRepository(), new UsersRepository())
+  )
+  .as("scoped");
