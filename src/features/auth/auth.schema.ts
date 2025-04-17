@@ -13,7 +13,7 @@ export const refreshTokens = pgTable("refresh_tokens", {
   token: text("token").notNull().unique(),
   userId: integer("user_id").references(() => users.id, {
     onDelete: "cascade",
-  }),
+  }).notNull(),
   expiresAt: timestamp("expires_at").notNull(),
   isRevoked: boolean("is_revoked").default(false),
   createdAt: timestamp("created_at").defaultNow(),

@@ -8,8 +8,8 @@ export const serverConfig = {
 export const jwtConfig = {
   secret: env.JWT_SECRET!,
   refreshSecret: env.JWT_REFRESH_SECRET!,
-  accessExpiresIn: 15 * 60,
-  refreshExpiresIn: 7 * 24 * 60 * 60,
+  accessExpiresIn: '15m',
+  refreshExpiresIn: '7d',
 };
 
 if (serverConfig.env === "development") {

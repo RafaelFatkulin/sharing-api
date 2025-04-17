@@ -33,4 +33,12 @@ export class AuthRepository {
 
     return refreshToken;
   }
+
+  async deleteAllRefreshTokens(userId: number) {
+    return await db.transaction(async (tx) => {
+      const tokens = await tx.delete(refreshTokens).where(eq(refreshTokens.userId, userId)).returning()
+
+      return tokens ?? []
+    })
+  }
 }

@@ -4,12 +4,13 @@ import { UsersModel } from "./users.model";
 import { CoreModel } from "@core/model";
 import { UsersRepository } from "./users.repository";
 import { trans } from '@core/locales'
+import { authMiddlewarePlugin } from "@features/auth/auth.plugin";
 
 export const usersRoute = new Elysia({ prefix: "/users", tags: ["Users"] })
   .use(CoreModel)
   .use(UsersModel)
   .use(usersServicePlugin)
-
+  .use(authMiddlewarePlugin(['super_admin', 'admin', 'manager']))
   .get("/", async ({ usersService, set }) => {
     set.status = 200;
     const users = await usersService.getAll()

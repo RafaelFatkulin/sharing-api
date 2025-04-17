@@ -2,94 +2,173 @@ import { UsersRepository } from "@features/users/users.repository";
 import { AuthRepository } from "./auth.repository";
 import { trans } from "@core/locales";
 import { BadRequestError } from "@core/core.errors";
-import { JWT } from "./auth.types";
+import { JWT, SignIn, SignUp } from "./auth.types";
 import { getExpTimestamp } from "./auth.utils";
 import { jwtConfig } from "@core/config";
-import Elysia from "elysia";
+import Elysia, { InternalServerError } from "elysia";
 import { userToResponse } from "@features/users/users.helpers";
 
 export class AuthService {
-  constructor(
-    private repository: AuthRepository,
-    private usersRepository: UsersRepository
-  ) {}
+    constructor(
+        private repository: AuthRepository,
+        private usersRepository: UsersRepository,
+    ) { }
 
-  async getUserByEmail(email: string) {
-    const user = await this.usersRepository.getByEmail(email);
+    async getUserById(id: number) {
+        const user = await this.usersRepository.getById(id);
 
-    if (!user) {
-      throw new BadRequestError(trans("auth.errors.incorrect"));
+        if (!user) {
+            throw new BadRequestError(trans("auth.errors.incorrect"));
+        }
+
+        return user;
     }
 
-    return user;
-  }
+    async getUserByEmail(email: string) {
+        const user = await this.usersRepository.getByEmail(email);
 
-  async comparePasswords(comparable: string, original: string) {
-    const isPasswordsMatch = await Bun.password.verify(
-      comparable,
-      original,
-      "bcrypt"
-    );
+        if (!user) {
+            throw new BadRequestError(trans("auth.errors.incorrect"));
+        }
 
-    if (!isPasswordsMatch) {
-      throw new BadRequestError(trans("auth.errors.incorrect"));
+        return user;
     }
 
-    return;
-  }
+    async checkEmailNotBusy(email: string) {
+        const user = await this.usersRepository.getByEmail(email);
 
-  async createRefreshToken(userId: number, token: string) {
-    console.log({ token });
-    await this.repository.deleteRefreshToken(token);
-
-    const refreshToken = await this.repository.createRefreshToken(
-      userId,
-      token
-    );
-
-    if (!refreshToken) {
-      throw new BadRequestError(trans("auth.errors.token-error"));
+        if (user) {
+            throw new BadRequestError(trans("users.errors.email-in-use", { email }));
+        }
     }
 
-    return;
-  }
+    async comparePasswords(comparable: string, original: string) {
+        const isPasswordsMatch = await Bun.password.verify(
+            comparable,
+            original,
+            "bcrypt"
+        );
 
-  async signin(
-    { email, password }: { email: string; password: string },
-    jwt: JWT,
-    refreshJwt: JWT
-  ) {
-    const user = await this.getUserByEmail(email);
-    await this.comparePasswords(password, user.password);
+        if (!isPasswordsMatch) {
+            throw new BadRequestError(trans("auth.errors.incorrect"));
+        }
 
-    const accessJWTToken = await jwt.sign({
-      sub: String(user.id),
-      exp: getExpTimestamp(jwtConfig.accessExpiresIn),
-    });
+        return;
+    }
 
-    const refreshJWTToken = await refreshJwt.sign({
-      sub: String(user.id),
-      exp: getExpTimestamp(jwtConfig.refreshExpiresIn),
-    });
+    async createRefreshToken(userId: number, token: string) {
+        await this.repository.deleteAllRefreshTokens(userId);
 
-    console.log(
-      getExpTimestamp(jwtConfig.accessExpiresIn),
-      getExpTimestamp(jwtConfig.refreshExpiresIn)
-    );
+        const refreshToken = await this.repository.createRefreshToken(
+            userId,
+            token
+        );
 
-    await this.createRefreshToken(user.id, refreshJWTToken);
+        if (!refreshToken) {
+            throw new BadRequestError(trans("auth.errors.token-error"));
+        }
 
-    return {
-      user: userToResponse(user),
-      accessToken: accessJWTToken,
-      refreshToken: refreshJWTToken,
-    };
-  }
+        return;
+    }
+
+    async generateTokens(
+        { id, email }: { id: number, email: string },
+        jwt: JWT,
+        refreshJwt: JWT
+    ) {
+        const accessJWTToken = await jwt.sign({
+            id,
+            email,
+        });
+
+        const refreshJWTToken = await refreshJwt.sign({
+            id,
+            email,
+        });
+
+        return {
+            accessJWTToken,
+            refreshJWTToken
+        }
+    }
+
+    async getRefreshToken(token: string) {
+        const refreshToken = await this.repository.getRefreshToken(token)
+
+        if (!refreshToken) {
+            throw new BadRequestError(trans("auth.errors.token-error"));
+        }
+
+        return refreshToken
+    }
+
+    async signin(
+        { email, password }: SignIn,
+        jwt: JWT,
+        refreshJwt: JWT,
+    ) {
+        const user = await this.getUserByEmail(email);
+        await this.comparePasswords(password, user.password);
+
+        const {
+            accessJWTToken,
+            refreshJWTToken
+        } = await this.generateTokens(
+            { id: user.id, email: user.email },
+            jwt,
+            refreshJwt
+        )
+
+        await this.createRefreshToken(user.id, refreshJWTToken);
+
+        return {
+            user: userToResponse(user),
+            accessToken: accessJWTToken,
+            refreshToken: refreshJWTToken,
+        };
+    }
+
+    async signup(data: SignUp) {
+        await this.checkEmailNotBusy(data.email)
+
+        const user = await this.usersRepository.create({
+            ...data,
+            role: data.role ? data.role : 'user',
+            password: await Bun.password.hash(data.password, "bcrypt")
+        })
+
+        if (!user) {
+            throw new InternalServerError(trans('auth.errors.register'));
+        }
+
+        return userToResponse(user)
+    }
+
+    async refresh(token: string, jwt: JWT, refreshJwt: JWT) {
+        const refreshToken = await this.getRefreshToken(token)
+        const user = await this.getUserById(refreshToken.userId)
+
+        const {
+            accessJWTToken,
+            refreshJWTToken
+        } = await this.generateTokens(
+            { id: user.id, email: user.email },
+            jwt,
+            refreshJwt
+        )
+
+        await this.createRefreshToken(user.id, refreshJWTToken);
+
+        return {
+            accessToken: accessJWTToken,
+            refreshToken: refreshJWTToken,
+        };
+    }
 }
 
 export const authServicePlugin = new Elysia({ name: "auth.service" })
-  .decorate(
-    "authService",
-    new AuthService(new AuthRepository(), new UsersRepository())
-  )
-  .as("scoped");
+    .decorate(
+        "authService",
+        new AuthService(new AuthRepository(), new UsersRepository())
+    )
+    .as("scoped");
