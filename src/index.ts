@@ -4,6 +4,7 @@ import { core } from "@core/index";
 import { usersRoute } from "@features/users/users.route";
 import { authRoute } from "@features/auth/auth.route";
 import swagger from "@elysiajs/swagger";
+import { renterProfilesRoute } from "@features/renter-profile/renter-profile.route";
 
 const app = new Elysia()
   .use(swagger({
@@ -22,7 +23,8 @@ const app = new Elysia()
   }))
   .use(core)
   .use(usersRoute)
-  .use(authRoute);
+  .use(authRoute)
+  .use(renterProfilesRoute);
 
 const startServer = async () => {
   try {

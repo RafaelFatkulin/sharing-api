@@ -3,7 +3,6 @@ import {
   createInsertSchema,
   createSelectSchema,
   createUpdateSchema,
-  EnumValuesToEnum,
 } from "drizzle-typebox";
 import { Static, t } from "elysia";
 

@@ -3,8 +3,6 @@ import { AuthRepository } from "./auth.repository";
 import { trans } from "@core/locales";
 import { BadRequestError } from "@core/core.errors";
 import { JWT, SignIn, SignUp } from "./auth.types";
-import { getExpTimestamp } from "./auth.utils";
-import { jwtConfig } from "@core/config";
 import Elysia, { InternalServerError } from "elysia";
 import { userToResponse } from "@features/users/users.helpers";
 

@@ -4,11 +4,11 @@ import { serial, timestamp, varchar } from "drizzle-orm/pg-core";
 
 export const rolesEnum = pgEnum(
     'role', [
-    'super_admin',
-    'admin',
-    'manager',
-    'user'
-]
+        'super_admin',
+        'admin',
+        'manager',
+        'user'
+    ]
 )
 
 export const users = pgTable('users', {

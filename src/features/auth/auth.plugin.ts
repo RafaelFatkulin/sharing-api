@@ -55,7 +55,6 @@ export const authMiddlewarePlugin = (reqiredRoles?: UserRole[]) => new Elysia()
       set.status = 401;
       throw new UnauthorizedError("Unauthorized");
     }
-    console.log(reqiredRoles);
 
     if (reqiredRoles && !reqiredRoles.includes(user.role)) {
       set.status = 403

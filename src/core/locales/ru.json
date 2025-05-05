@@ -26,5 +26,18 @@
         "messages": {
             "register-successfull": "Успешная регистрация"
         }
+    },
+    "renter-profiles": {
+        "errors": {
+            "not-found": "Профиль с ID={{id}} не найден",
+            "not-found-unique": "Профиль {{name}} не найден у пользователя с ID={{id}} ",
+            "already-exists": "У пользователя с ID={{id}} уже есть профиль {{name}}",
+            "create": "Ошибка при создании профиля",
+            "update": "Ошибка при обновлении профиля"
+        },
+        "messages": {
+            "updated": "Данные профиля обновлены",
+            "deleted": "Профиль удален"
+        }
     }
   }

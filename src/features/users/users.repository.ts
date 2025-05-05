@@ -19,9 +19,9 @@ export class UsersRepository implements IUsersRepository {
     return users ?? null
   }
 
-  async getById(id: number) {
+  async getById(id: number | string) {
     const user = await db.query.users.findFirst({
-      where: eq(users.id, id),
+      where: eq(users.id, Number(id)),
     });
 
     return user ?? null;
@@ -43,21 +43,21 @@ export class UsersRepository implements IUsersRepository {
     });
   }
 
-  async update(id: number, data: UpdateUser) {
+  async update(id: number | string, data: UpdateUser) {
     return await db.transaction(async (tx) => {
       const [user] = await tx
         .update(users)
         .set(data)
-        .where(eq(users.id, id))
+        .where(eq(users.id, Number(id)))
         .returning();
 
       return user ?? null;
     });
   }
 
-  async delete(id: number) {
+  async delete(id: number | string) {
     return await db.transaction(async (tx) => {
-      const [user] = await tx.delete(users).where(eq(users.id, id)).returning();
+      const [user] = await tx.delete(users).where(eq(users.id, Number(id))).returning();
 
       return user ?? null;
     });
