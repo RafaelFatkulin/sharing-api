@@ -42,20 +42,24 @@ export class CategoryRepository implements ICategoryRepository {
         return category ?? null
     }
 
-    async getUnique(name: string, parentId: string) {
+    async getUnique(name: string, parentId: string | null | undefined) {
         const category = await db.query.categories.findFirst({
             where(fields, operators) {
                 return operators.and(
-                    operators.eq(categories.name, name),
-                    operators.eq(categories.parentId, parentId),
-                )
+                    operators.eq(fields.name, name),
+                    parentId === null || parentId === undefined 
+                        ? operators.isNull(fields.parentId)
+                        : operators.eq(fields.parentId, parentId)
+                );
             },
-        })
-
-        return category ?? null
+        });
+    
+        return category ?? null;
     }
 
     async create(data: CreateCategory) {
+        console.log(data);
+        
         return db.transaction(async (tx) => {
             const [category] = await tx
                 .insert(categories)

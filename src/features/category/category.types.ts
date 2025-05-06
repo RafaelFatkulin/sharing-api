@@ -13,9 +13,18 @@ const _updateCategory = createUpdateSchema(categories, {
 })
 
 export const categorySchema = _category
+export const categoryTreeItemSchema = t.Recursive((Self) =>
+    t.Object({
+      ..._category.properties,
+      children: t.Array(Self)
+    })
+  )
 export const createCategorySchema = t.Omit(_createCategory, ['id', 'createdAt'])
+export const createCategoryDtoSchema = t.Omit(createCategorySchema, ['slug'])
 export const updateCategorySchema = t.Omit(t.Partial(_updateCategory), ['id', 'createdAt'])
 
 export type Category = typeof categorySchema.static
+export type CategoryTreeItem = typeof categoryTreeItemSchema.static
 export type CreateCategory = typeof createCategorySchema.static
+export type CreateCategoryDto = typeof createCategoryDtoSchema.static
 export type UpdateCategory = typeof updateCategorySchema.static

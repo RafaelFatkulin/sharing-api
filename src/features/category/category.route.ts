@@ -1,5 +1,5 @@
 import { CoreModel } from "@core/model";
-import Elysia from "elysia";
+import Elysia, { t } from "elysia";
 import { CategoriesModel } from "./category.model";
 import { categoriesServicePlugin } from "./category.service";
 import { trans } from "@core/locales";
@@ -11,12 +11,18 @@ export const categoriesRoute = new Elysia({
     .use(CoreModel)
     .use(CategoriesModel)
     .use(categoriesServicePlugin)
-    .get('/', async ({categoriesService, set}) => {
-        const categories = categoriesService.getAll()
+    .get('/', async ({query, categoriesService, set}) => {
+        const { tree } = query
+
+        const categories = categoriesService.getAll({
+            tree: !!tree
+        })
+
         set.status = 200
 
         return categories
     }, {
+        query: 'category.filter',
         response: {
             200: "category.response[]"
         }
@@ -46,7 +52,7 @@ export const categoriesRoute = new Elysia({
             return category
         }, {
             params: 'param.slug',
-            response: {
+            response: { 
                 200: 'category.response',
                 404: 'error'
             }
