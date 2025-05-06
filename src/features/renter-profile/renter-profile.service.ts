@@ -21,13 +21,7 @@ export class RenterProfilesService {
     }
 
     async getUnique(userId: number, name: string) {
-        const renterProfile = await this.repository.getUnique(userId, name)
-
-        if(!renterProfile) {
-            throw new NotFoundError(trans('renter-profiles.errors.not-found-unique', {userId, name}))
-        }
-
-        return renterProfile
+        return await this.repository.getUnique(userId, name)
     }
 
     async create(data: CreateRenterProfile): Promise<RenterProfile> {

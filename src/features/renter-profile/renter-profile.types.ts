@@ -6,15 +6,16 @@ const _renterProfile = createSelectSchema(renterProfiles)
 const _createRenterProfile = createInsertSchema(renterProfiles, {
     name: t.String({minLength: 8, maxLength: 255}),
     email: t.String({format: 'email'}),
-    type: t.UnionEnum([ProfileType.INDIVIDUAL, ProfileType.ORGANIZATION]),
-    contactPhone: t.String({minLength: 11, maxLength: 20, pattern: '^(?:\+7|8)[\s\-]?\(?\d{3}\)?[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}$'}),
-    taxId: t.Optional(t.String({maxLength: 13}))
+    type: t.Enum(ProfileType),
+    contactPhone: t.String({minLength: 11, maxLength: 20, pattern: String.raw`^(?:\+7|8)[\s\-]?\(?\d{3}\)?[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}$`}),
+    taxId: t.Optional(t.String({maxLength: 13})),
+    description: t.Optional(t.String())
 })
 const _updateRenterProfile = createUpdateSchema(renterProfiles, {
     name: t.String({minLength: 8, maxLength: 255}),
     email: t.String({format: 'email'}),
-    type: t.UnionEnum([ProfileType.INDIVIDUAL, ProfileType.ORGANIZATION]),
-    contactPhone: t.String({minLength: 11, maxLength: 20, pattern: '^(?:\+7|8)[\s\-]?\(?\d{3}\)?[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}$'}),
+    type: t.Enum(ProfileType),
+    contactPhone: t.String({minLength: 11, maxLength: 20, pattern: String.raw`^(?:\+7|8)[\s\-]?\(?\d{3}\)?[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}$`}),
     taxId: t.Optional(t.String({maxLength: 13}))
 })
 

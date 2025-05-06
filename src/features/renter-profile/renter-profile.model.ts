@@ -3,10 +3,8 @@ import { createRenterProfileSchema, renterProfileSchema, updateRenterProfileSche
 
 export const RenterProfilesModel = new Elysia().model({
     renterProfile: renterProfileSchema,
-    "renter-profile.response": t.Object({
-        renterProfile: renterProfileSchema,
-      }),
-    "renter-profile.array-response": t.Object({renterProfiles: t.Array(renterProfileSchema)}),
+    "renter-profile.response": renterProfileSchema,
+    "renter-profile.array-response": t.Array(renterProfileSchema),
     "renter-profile.create": createRenterProfileSchema,
     "renter-profile.update": updateRenterProfileSchema,
 }).as('scoped')

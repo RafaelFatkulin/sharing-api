@@ -12,9 +12,7 @@ export const renterProfilesRoute = new Elysia({ prefix: '/renter-profiles', tags
         set.status = 200
         const renterProfiles = await renterProfilesService.getAll()
 
-        return {
-            renterProfiles
-        }
+        return renterProfiles
     }, {
         response: {
             200: "renter-profile.array-response"
@@ -27,7 +25,7 @@ export const renterProfilesRoute = new Elysia({ prefix: '/renter-profiles', tags
 
             set.status = 200
 
-            return { renterProfile }
+            return renterProfile
         },
         {
             params: 'param.string-id',
@@ -43,9 +41,7 @@ export const renterProfilesRoute = new Elysia({ prefix: '/renter-profiles', tags
             const renterProfile = await renterProfilesService.create(body)
             set.status = 201
 
-            return {
-                renterProfile
-            }
+            return renterProfile
         }, 
         {
             body: 'renter-profile.create',
