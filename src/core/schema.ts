@@ -8,6 +8,10 @@ export const IdStringParamSchema = t.Object({
   id: t.String({ minimum: 1, multipleOf: 1 }),
 });
 
+export const SlugParamSchema = t.Object({
+  slug: t.String({ minimum: 1, multipleOf: 1 }),
+});
+
 export const ErrorSchema = t.Object({
   error: t.Optional(t.String()),
   details: t.Optional(t.Record(t.String(), t.Array(t.String()))),

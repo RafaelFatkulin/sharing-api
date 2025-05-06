@@ -15,6 +15,20 @@
       "when": 1746443922484,
       "tag": "0001_lucky_mister_sinister",
       "breakpoints": false
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1746518626417,
+      "tag": "0002_special_human_fly",
+      "breakpoints": false
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1746519110905,
+      "tag": "0003_minor_sunset_bain",
+      "breakpoints": false
     }
   ]
 }
