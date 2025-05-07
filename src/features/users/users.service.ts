@@ -1,6 +1,8 @@
 import {
   CreateUser,
   UpdateUser,
+  UserFilters,
+  UserQuery,
   UserResponse,
 } from "./users.types";
 import Elysia, { InternalServerError, NotFoundError } from "elysia";
@@ -11,8 +13,18 @@ import { trans } from "@core/locales";
 export class UsersService {
   constructor(private repository: UsersRepository) { }
 
-  async getAll() {
-    return usersToResponse(await this.repository.getAll())
+  async getAll(filter: UserQuery) {
+    const {users, total} = await this.repository.getAll(filter)
+    
+    return {
+      users: usersToResponse(users),
+      meta: {
+        total,
+        page: filter.page ?? 1,
+        perPage: filter.perPage ?? 10,
+        totalPages: Math.ceil(total / (filter.perPage ?? 1))
+      }
+    } 
   }
 
   async getById(id: number) {

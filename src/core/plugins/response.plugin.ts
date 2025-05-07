@@ -1,6 +1,12 @@
 import { trans } from "@core/locales";
 import Elysia from "elysia";
 
+type ResponseWithMeta = {
+    message?: string;
+    meta?: unknown;
+    [key: string]: unknown;
+};
+
 export const responsePlugin = new Elysia()
     .mapResponse(({ request, response, set }) => {
         if (new URL(request.url).pathname.startsWith("/swagger")) {
@@ -40,19 +46,29 @@ export const responsePlugin = new Elysia()
             }
         }
 
-        let message = "Success";
+        let message = undefined;
         let data = response;
+        let meta = undefined;
 
         if (typeof response === "object" && !Array.isArray(response)) {
-            if ("message" in response) {
-                const { message: _, ...rest } = response;
-                data = rest;
+            const r = response as ResponseWithMeta;
+
+            if ("message" in r && typeof r.message === "string") {
+                message = r.message;
             }
+
+            if ("meta" in r) {
+                meta = r.meta;
+            }
+
+            const { message: _, meta: __, ...rest } = r;
+            data = rest;
         }
 
         const wrappedResponse = {
             data,
             message,
+            ...(meta !== undefined && { meta }),
         };
 
         const statusCode =

@@ -1,22 +1,45 @@
-import { eq } from "drizzle-orm";
+import { and, eq, ilike, or, SQL } from "drizzle-orm";
 import { users } from "./users.schema";
-import { CreateUser, UpdateUser, User } from "./users.types";
+import { CreateUser, UpdateUser, User, UserQuery } from "./users.types";
 import { db } from "@core/db";
 
-interface IUsersRepository
-  extends BaseRepository<User, CreateUser, UpdateUser> {
-  getByEmail: (email: string) => Promise<User | null>;
-}
 
-export class UsersRepository implements IUsersRepository {
-  async getAll() {
-    const users = db.query.users.findMany({
+export class UsersRepository {
+  async getAll(filter: UserQuery) {
+    const { page = 1, perPage = 10, q, role } = filter;
+    const offset = (page - 1) * perPage;
+    
+    const whereConditions: SQL[] = [];
+  
+    if (q) {
+      const searchCondition = or(
+        ilike(users.fullName, `%${q.toLowerCase()}%`),
+        ilike(users.email, `%${q.toLowerCase()}%`)
+      ) as SQL<unknown>;
+      whereConditions.push(searchCondition);
+    }
+
+    if (role) {
+      whereConditions.push(eq(users.role, role));
+    }
+  
+    const whereClause = whereConditions.length > 0 ? and(...whereConditions) : undefined
+  
+    const usersList = await db.query.users.findMany({
+      where: whereClause,
       orderBy(fields, operators) {
         return operators.desc(fields.createdAt);
       },
+      limit: perPage,
+      offset,
     });
-
-    return users ?? null
+  
+    const total = await db.$count(users, whereClause);
+  
+    return {
+      users: usersList,
+      total,
+    };
   }
 
   async getById(id: number | string) {

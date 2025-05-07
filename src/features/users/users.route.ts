@@ -5,22 +5,22 @@ import { CoreModel } from "@core/model";
 import { UsersRepository } from "./users.repository";
 import { trans } from '@core/locales'
 import { authMiddlewarePlugin } from "@features/auth/auth.plugin";
+import { userResponseSchema } from "./users.types";
 
 export const usersRoute = new Elysia({ prefix: "/users", tags: ["Users"] })
   .use(CoreModel)
   .use(UsersModel)
   .use(usersServicePlugin)
   .use(authMiddlewarePlugin(['super_admin', 'admin', 'manager']))
-  .get("/", async ({ usersService, set }) => {
+  .get("/", async ({ query, usersService, set }) => {
     set.status = 200;
-    const users = await usersService.getAll()
-
-    return {
-      users,
-    };
+    const users = await usersService.getAll(query)
+    
+    return users;
   }, {
+    query: 'users.filter',
     response: {
-      200: "user.array-response"
+      200: 'user.array-response'
     }
   })
   .get(

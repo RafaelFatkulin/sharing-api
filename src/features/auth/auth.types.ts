@@ -1,8 +1,8 @@
 import { password } from 'bun';
 import { JWTPayloadSpec } from "@elysiajs/jwt";
 import { t } from "elysia";
-import { rolesEnum } from '@features/users/users.schema';
 import { userResponseSchema } from '@features/users/users.types';
+import { UserRole } from '@features/users/users.schema';
 
 export type JWT = {
     readonly sign: (morePayload: Record<string, string | number> & JWTPayloadSpec) => Promise<string>;
@@ -17,7 +17,7 @@ export const signInSchema = t.Object({
 export const signUpSchema = t.Object({
     fullName: t.String({ minLength: 8, maxLength: 255 }),
     email: t.String({ format: "email" }),
-    role: t.Optional(t.UnionEnum(rolesEnum.enumValues)),
+    role: t.Optional(t.Enum(UserRole)),
     password: t.String({ minLength: 8, maxLength: 255 }),
 })
 
