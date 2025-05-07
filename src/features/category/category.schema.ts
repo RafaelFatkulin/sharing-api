@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import { AnyPgColumn, pgTable, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 
 export const categories = pgTable('categories', {
@@ -9,3 +10,14 @@ export const categories = pgTable('categories', {
     slug: varchar('slug', { length: 255 }).unique().notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow()
 })
+
+export const categoriesRelations = relations(categories, ({ one, many }) => ({
+    parent: one(categories, {
+      fields: [categories.parentId],
+      references: [categories.id],
+      relationName: "parent",
+    }),
+    children: many(categories, {
+      relationName: "parent",
+    }),
+  }));

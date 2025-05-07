@@ -22,20 +22,22 @@ export const categoriesRoute = new Elysia({
 
         return categories
     }, {
-        query: 'category.filter',
+        query: 'category.many.filter',
         response: {
             200: "category.response[]"
         }
     })
     .get(
         '/:id',
-        async ({params, categoriesService, set}) => {
-            const category = await categoriesService.getById(params.id)
+        async ({params, query, categoriesService, set}) => {
+            const {children} = query
+            const category = await categoriesService.getById(params.id, children)
             set.status = 200
 
             return category
         },
         {
+            query: 'category.one.filter',
             params: 'param.string-id',
             response: {
                 200: 'category.response',
@@ -45,12 +47,14 @@ export const categoriesRoute = new Elysia({
     )
     .get(
         '/slug/:slug',
-        async ({params, categoriesService, set}) => {
-            const category = await categoriesService.getBySlug(params.slug)
+        async ({params, query, categoriesService, set}) => {
+            const {children} = query
+            const category = await categoriesService.getBySlug(params.slug, children)
             set.status = 200
 
             return category
         }, {
+            query: 'category.one.filter',
             params: 'param.slug',
             response: { 
                 200: 'category.response',

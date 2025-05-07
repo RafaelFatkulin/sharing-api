@@ -4,10 +4,13 @@ import { categorySchema, categoryTreeItemSchema, createCategoryDtoSchema, update
 export const CategoriesModel = new Elysia()
     .model({
         category: categorySchema,
-        'category.filter': t.Object({
+        'category.many.filter': t.Object({
             tree: t.Optional(t.Boolean()),
         }),
-        'category.response': categorySchema,
+        'category.one.filter': t.Object({
+            children: t.Optional(t.Boolean())
+        }),
+        'category.response': t.Union([categorySchema, categoryTreeItemSchema]),
         'category.array-response': t.Array(t.Union([categorySchema, categoryTreeItemSchema])),
         'category.create': createCategoryDtoSchema,
         'category.update': updateCategorySchema

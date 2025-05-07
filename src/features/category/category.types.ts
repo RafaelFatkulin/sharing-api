@@ -16,7 +16,7 @@ export const categorySchema = _category
 export const categoryTreeItemSchema = t.Recursive((Self) =>
     t.Object({
       ..._category.properties,
-      children: t.Array(Self)
+      children: t.Optional(t.Array(Self))
     })
   )
 export const createCategorySchema = t.Omit(_createCategory, ['id', 'createdAt'])

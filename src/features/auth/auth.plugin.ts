@@ -64,4 +64,4 @@ export const authMiddlewarePlugin = (reqiredRoles?: UserRole[]) => new Elysia()
     return {
       user: user,
     };
-  }).as('plugin');
+  }).as('scoped');

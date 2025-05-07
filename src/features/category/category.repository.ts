@@ -1,5 +1,5 @@
 import { db } from "@core/db";
-import { Category, CreateCategory, UpdateCategory } from "./category.types";
+import { Category, CategoryTreeItem, CreateCategory, UpdateCategory } from "./category.types";
 import { categories } from "./category.schema";
 import { eq, Update } from "drizzle-orm";
 
@@ -22,24 +22,36 @@ export class CategoryRepository implements ICategoryRepository {
         return categories ?? []
     }
 
-    async getById(id: string | number) {
+    async getById(id: string | number, children?: boolean) {
         const category = await db.query.categories.findFirst({
             where(fields, operators) {
-                return operators.eq(categories.id, String(id))
+                return operators.eq(fields.id, String(id));
             },
-        })
-
-        return category ?? null
+            with: children ? { children: true } : undefined
+        });
+    
+        return category ?? null;
+    }
+    
+    async getBySlug(slug: string, children?: boolean) {
+        const category = await db.query.categories.findFirst({
+            where(fields, operators) {
+                return operators.eq(fields.slug, slug);
+            },
+            with: children ? { children: true } : undefined
+        });
+    
+        return category ?? null;
     }
 
-    async getBySlug(slug: string) {
-        const category = await db.query.categories.findFirst({
+    async getSubcategories(id: string) {
+        const categories = await db.query.categories.findMany({
             where(fields, operators) {
-                return operators.eq(categories.slug, slug)
+                return operators.eq(fields.parentId, id)
             },
         })
 
-        return category ?? null
+        return categories ?? []
     }
 
     async getUnique(name: string, parentId: string | null | undefined) {
@@ -58,8 +70,6 @@ export class CategoryRepository implements ICategoryRepository {
     }
 
     async create(data: CreateCategory) {
-        console.log(data);
-        
         return db.transaction(async (tx) => {
             const [category] = await tx
                 .insert(categories)

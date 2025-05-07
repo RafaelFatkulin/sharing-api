@@ -42,8 +42,8 @@ export class CategoriesService {
         return roots
     }
 
-    async getById(id: string) {
-        const category = await this.repository.getById(id)
+    async getById(id: string, children?: boolean) {
+        const category = await this.repository.getById(id, children)
 
         if(!category) {
             throw new NotFoundError(trans('categories.errors.not-found', { id }))
@@ -52,8 +52,8 @@ export class CategoriesService {
         return category
     }
 
-    async getBySlug(slug: string) {
-        const category = await this.repository.getBySlug(slug)
+    async getBySlug(slug: string, children?: boolean) {
+        const category = await this.repository.getBySlug(slug, children)
 
         if(!category) {
             throw new NotFoundError(trans('categories.errors.not-found-slug', { slug }))

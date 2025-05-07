@@ -103,4 +103,4 @@ export const errorPlugin = new Elysia()
         }
 
         return response;
-    }).as('plugin')
+    }).as('scoped')

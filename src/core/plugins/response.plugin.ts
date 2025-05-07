@@ -64,4 +64,4 @@ export const responsePlugin = new Elysia()
             headers: { "Content-Type": "application/json" },
             status: statusCode,
         });
-    }).as('plugin')
+    }).as('scoped')
