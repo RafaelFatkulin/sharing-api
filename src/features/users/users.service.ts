@@ -27,7 +27,7 @@ export class UsersService {
     } 
   }
 
-  async getById(id: number) {
+  async getById(id: number) {  
     const user = await this.repository.getById(id);
 
     if (!user) {

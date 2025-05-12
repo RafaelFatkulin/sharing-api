@@ -6,12 +6,13 @@ import { UsersRepository } from "./users.repository";
 import { trans } from '@core/locales'
 import { authMiddlewarePlugin } from "@features/auth/auth.plugin";
 import { userResponseSchema } from "./users.types";
+import { UserRole } from "./users.schema";
 
 export const usersRoute = new Elysia({ prefix: "/users", tags: ["Users"] })
   .use(CoreModel)
   .use(UsersModel)
   .use(usersServicePlugin)
-  .use(authMiddlewarePlugin(['super_admin', 'admin', 'manager']))
+  .use(authMiddlewarePlugin([UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MANAGER]))
   .get("/", async ({ query, usersService, set }) => {
     set.status = 200;
     const users = await usersService.getAll(query)

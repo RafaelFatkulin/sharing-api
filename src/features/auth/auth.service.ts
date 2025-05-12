@@ -5,6 +5,7 @@ import { BadRequestError } from "@core/core.errors";
 import { JWT, SignIn, SignUp } from "./auth.types";
 import Elysia, { InternalServerError } from "elysia";
 import { userToResponse } from "@features/users/users.helpers";
+import { UserRole } from "@features/users/users.schema";
 
 export class AuthService {
     constructor(
@@ -131,7 +132,7 @@ export class AuthService {
 
         const user = await this.usersRepository.create({
             ...data,
-            role: data.role ? data.role : 'user',
+            role: data.role ? data.role : UserRole.USER,
             password: await Bun.password.hash(data.password, "bcrypt")
         })
 

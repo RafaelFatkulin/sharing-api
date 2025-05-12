@@ -8,6 +8,7 @@ import { renterProfilesRoute } from "@features/renter-profile/renter-profile.rou
 import { categoriesRoute } from "@features/category/category.route";
 
 const app = new Elysia()
+  .get('/', () => 'hello')
   .use(swagger({
     path: "/swagger",
     documentation: {

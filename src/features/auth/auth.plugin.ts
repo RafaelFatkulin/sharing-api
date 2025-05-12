@@ -1,8 +1,9 @@
-import { UserResponse, UserRole } from './../users/users.types';
+import { UserResponse } from './../users/users.types';
 import { jwtConfig } from "@core/config";
 import { ForbiddenError, UnauthorizedError } from "@core/core.errors";
 import bearer from "@elysiajs/bearer";
 import jwt from "@elysiajs/jwt";
+import { UserRole } from '@features/users/users.schema';
 import {
   usersServicePlugin,
 } from "@features/users/users.service";
@@ -34,13 +35,17 @@ export const authMiddlewarePlugin = (reqiredRoles?: UserRole[]) => new Elysia()
     })
   )
   .use(usersServicePlugin)
-  .derive(async ({ jwt, set, bearer, usersService }) => {
-    if (!bearer) {
+  .derive(async ({ jwt, set, cookie, usersService }) => {
+    console.log(cookie);
+    
+    const { accessToken } = cookie
+    
+    if (!accessToken) {
       set.status = 401;
       throw new UnauthorizedError("Unauthorized");
     }
 
-    const payload = await jwt.verify(bearer);
+    const payload = await jwt.verify(accessToken.value);
 
     if (!payload) {
       set.status = 401;
@@ -56,7 +61,7 @@ export const authMiddlewarePlugin = (reqiredRoles?: UserRole[]) => new Elysia()
       throw new UnauthorizedError("Unauthorized");
     }
 
-    if (reqiredRoles && !reqiredRoles.includes(user.role)) {
+    if (reqiredRoles && !reqiredRoles.includes(user.role as UserRole)) {
       set.status = 403
       throw new ForbiddenError("Forbidden")
     }
