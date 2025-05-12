@@ -9,15 +9,7 @@ import { categoriesRoute } from "@features/category/category.route";
 import cors from "@elysiajs/cors";
 
 const app = new Elysia()
-  .use(
-    cors({
-      origin: "http://localhost:3000", // Allow requests from this origin
-      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Allowed HTTP methods
-      allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers,
-      credentials: true, // Allow credentials (e.g., cookies, authorization headers)
-      preflight: true,
-    })
-  )
+  .use(cors())
   .get("/", () => "hello")
   .use(
     swagger({
