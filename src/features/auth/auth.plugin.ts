@@ -36,8 +36,6 @@ export const authMiddlewarePlugin = (reqiredRoles?: UserRole[]) => new Elysia()
   )
   .use(usersServicePlugin)
   .derive(async ({ jwt, set, cookie, usersService }) => {
-    console.log(cookie);
-    
     const { accessToken } = cookie
     
     if (!accessToken) {

@@ -93,7 +93,6 @@ export class AuthService {
 
     async getRefreshToken(token: string) {
         const refreshToken = await this.repository.getRefreshToken(token)
-        console.log({token, refreshToken});
         
         if (!refreshToken) {
             throw new BadRequestError(trans("auth.errors.token-error"));
@@ -145,9 +144,6 @@ export class AuthService {
     }
 
     async refresh(token: string, jwt: JWT, refreshJwt: JWT) {
-        console.log({token, jwt, refreshJwt});
-        console.log({token});
-        
         if (!token) {
             throw new UnauthorizedError(trans('auth.errors.unhandled'));
         }

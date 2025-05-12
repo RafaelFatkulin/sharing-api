@@ -19,19 +19,19 @@ export const authRoute = new Elysia({ prefix: "/auth", tags: ["Auth"] })
         accessToken: {
           value: data.accessToken,
           httpOnly: true,
-          path: '/',
-          maxAge: 15 * 60
+          path: "/",
+          maxAge: 15 * 60,
         },
         refreshToken: {
           value: data.refreshToken,
           httpOnly: true,
-          path: '/',
-          maxAge: 7 * 24 *  60 * 60
-        }
-      }
+          path: "/",
+          maxAge: 7 * 24 * 60 * 60,
+        },
+      };
 
       return {
-        user: data.user
+        user: data.user,
       };
     },
     {
@@ -39,40 +39,44 @@ export const authRoute = new Elysia({ prefix: "/auth", tags: ["Auth"] })
     }
   )
   .post(
-    '/sign-up',
+    "/sign-up",
     async ({ set, authService, body }) => {
-      const data = await authService.signup(body)
-      set.status = 201
+      const data = await authService.signup(body);
+      set.status = 201;
 
       return {
         user: data,
-        message: trans("auth.messages.register.successfull")
-      }
+        message: trans("auth.messages.register.successfull"),
+      };
     },
     {
-      body: 'sign-up',
+      body: "sign-up",
       response: {
-        200: 'sign-up.response'
-      }
+        200: "sign-up.response",
+      },
     }
   )
   .post(
-    '/refresh',
+    "/refresh",
     async ({ set, authService, cookie, jwt, refreshJwt }) => {
-      const data = await authService.refresh(cookie.refreshToken.value!, jwt, refreshJwt)
-      
+      const data = await authService.refresh(
+        cookie.refreshToken.value!,
+        jwt,
+        refreshJwt
+      );
+
       set.cookie = {
         accessToken: {
           value: data.accessToken,
           httpOnly: true,
-          path: '/',
+          path: "/",
           maxAge: 15 * 60, // 15 minutes
         },
         refreshToken: {
           value: data.refreshToken,
           httpOnly: true,
-          path: '/',
-          maxAge: 7 * 24 * 60 * 60, // 7 days
+          path: "/",
+          maxAge: 7 * 24 * 60 * 60, // 7 days,
         },
       };
 
@@ -84,45 +88,43 @@ export const authRoute = new Elysia({ prefix: "/auth", tags: ["Auth"] })
     },
     {
       response: {
-        200: 'refresh.response'
-      }
+        200: "refresh.response",
+      },
     }
   )
   .use(authMiddlewarePlugin([UserRole.SUPER_ADMIN]))
-  .get('/me', ({ user }) => ({ user }), {
+  .get("/me", ({ user }) => ({ user }), {
     detail: {
-      security: [
-        { bearerAuth: [] }
-      ]
-    }
+      security: [{ bearerAuth: [] }],
+    },
   })
   .post(
-    '/logout',
+    "/logout",
     async ({ set }) => {
       set.cookie = {
         accessToken: {
-          value: '',
+          value: "",
           httpOnly: true,
-          path: '/',
-          maxAge: 0
+          path: "/",
+          maxAge: 0,
         },
         refreshToken: {
-          value: '',
+          value: "",
           httpOnly: true,
-          path: '/',
-          maxAge: 0
-        }
+          path: "/",
+          maxAge: 0,
+        },
       };
 
       set.status = 200;
 
       return {
-        message: trans("auth.messages.logout")
+        message: trans("auth.messages.logout"),
       };
     },
     {
       response: {
-        200: 'logout.response'
-      }
+        200: "logout.response",
+      },
     }
   );

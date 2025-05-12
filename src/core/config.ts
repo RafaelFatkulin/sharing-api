@@ -1,15 +1,15 @@
 import { env } from "bun";
 
 export const serverConfig = {
-  port: env.PORT || 3000,
+  port: env.PORT || 8080,
   env: env.NODE_ENV || "development",
 };
 
 export const jwtConfig = {
   secret: env.JWT_SECRET!,
   refreshSecret: env.JWT_REFRESH_SECRET!,
-  accessExpiresIn: '15m',
-  refreshExpiresIn: '7d',
+  accessExpiresIn: "15m",
+  refreshExpiresIn: "7d",
 };
 
 if (serverConfig.env === "development") {
