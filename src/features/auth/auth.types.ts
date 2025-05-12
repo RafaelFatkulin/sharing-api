@@ -34,5 +34,9 @@ export const refreshResponseSchema = t.Object({
     message: t.String()
 })
 
+export const logoutResponseSchema = t.Object({
+    message: t.String()
+})
+
 export type SignIn = typeof signInSchema.static
 export type SignUp = typeof signUpSchema.static

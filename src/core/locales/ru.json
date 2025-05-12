@@ -21,10 +21,12 @@
         "errors": {
             "incorrect": "Введенные данные некорректные",
             "token-error": "Произошла ошибка при создании токена",
-            "register": "Ошибка при регистрации"
+            "register": "Ошибка при регистрации",
+            "unhandled": "Ошибка авторизации"
         },
         "messages": {
-            "register-successfull": "Успешная регистрация"
+            "register-successfull": "Успешная регистрация",
+            "logout": "Вы вышли из аккаунта"
         }
     },
     "renter-profiles": {

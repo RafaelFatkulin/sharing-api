@@ -1,5 +1,5 @@
 import Elysia from "elysia";
-import { refreshResponseSchema, refreshSchema, signInSchema, signUpResponseSchema, signUpSchema } from "./auth.types";
+import { logoutResponseSchema, refreshResponseSchema, refreshSchema, signInSchema, signUpResponseSchema, signUpSchema } from "./auth.types";
 
 export const AuthModel = new Elysia().model({
     'sign-in': signInSchema,
@@ -7,4 +7,5 @@ export const AuthModel = new Elysia().model({
     'refresh': refreshSchema,
     'sign-up.response': signUpResponseSchema,
     'refresh.response': refreshResponseSchema,
+    'logout.response': logoutResponseSchema,
 }).as('scoped')

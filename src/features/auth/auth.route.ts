@@ -58,8 +58,8 @@ export const authRoute = new Elysia({ prefix: "/auth", tags: ["Auth"] })
   )
   .post(
     '/refresh',
-    async ({ set, authService, body, jwt, refreshJwt }) => {
-      const data = await authService.refresh(body.refreshToken, jwt, refreshJwt)
+    async ({ set, authService, cookie, jwt, refreshJwt }) => {
+      const data = await authService.refresh(cookie.refreshToken.value!, jwt, refreshJwt)
       
       set.cookie = {
         accessToken: {
@@ -83,7 +83,6 @@ export const authRoute = new Elysia({ prefix: "/auth", tags: ["Auth"] })
       };
     },
     {
-      body: 'refresh',
       response: {
         200: 'refresh.response'
       }
@@ -97,3 +96,33 @@ export const authRoute = new Elysia({ prefix: "/auth", tags: ["Auth"] })
       ]
     }
   })
+  .post(
+    '/logout',
+    async ({ set }) => {
+      set.cookie = {
+        accessToken: {
+          value: '',
+          httpOnly: true,
+          path: '/',
+          maxAge: 0
+        },
+        refreshToken: {
+          value: '',
+          httpOnly: true,
+          path: '/',
+          maxAge: 0
+        }
+      };
+
+      set.status = 200;
+
+      return {
+        message: trans("auth.messages.logout")
+      };
+    },
+    {
+      response: {
+        200: 'logout.response'
+      }
+    }
+  );

@@ -1,7 +1,7 @@
 import { UsersRepository } from "@features/users/users.repository";
 import { AuthRepository } from "./auth.repository";
 import { trans } from "@core/locales";
-import { BadRequestError } from "@core/core.errors";
+import { BadRequestError, UnauthorizedError } from "@core/core.errors";
 import { JWT, SignIn, SignUp } from "./auth.types";
 import Elysia, { InternalServerError } from "elysia";
 import { userToResponse } from "@features/users/users.helpers";
@@ -93,7 +93,8 @@ export class AuthService {
 
     async getRefreshToken(token: string) {
         const refreshToken = await this.repository.getRefreshToken(token)
-
+        console.log({token, refreshToken});
+        
         if (!refreshToken) {
             throw new BadRequestError(trans("auth.errors.token-error"));
         }
@@ -144,9 +145,25 @@ export class AuthService {
     }
 
     async refresh(token: string, jwt: JWT, refreshJwt: JWT) {
-        const refreshToken = await this.getRefreshToken(token)
-        const user = await this.getUserById(refreshToken.userId)
+        console.log({token, jwt, refreshJwt});
+        console.log({token});
+        
+        if (!token) {
+            throw new UnauthorizedError(trans('auth.errors.unhandled'));
+        }
 
+        const refreshToken = await this.getRefreshToken(token)
+        
+        if (!refreshToken) {
+            throw new UnauthorizedError(trans('auth.errors.unhandled'));
+        }
+        
+        const user = await this.getUserById(refreshToken.userId)
+        
+        if (!refreshToken) {
+            throw new UnauthorizedError(trans('auth.errors.unhandled'));
+        }
+        
         const {
             accessJWTToken,
             refreshJWTToken
