@@ -92,7 +92,7 @@ export const authRoute = new Elysia({ prefix: "/auth", tags: ["Auth"] })
       },
     }
   )
-  .use(authMiddlewarePlugin([UserRole.SUPER_ADMIN]))
+  .use(authMiddlewarePlugin())
   .get("/me", ({ user }) => ({ user }), {
     detail: {
       security: [{ bearerAuth: [] }],
